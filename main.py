@@ -110,9 +110,6 @@ def event_subscription_handler(request):
     logger.debug(f'request={request_json}')
 
     try:
-        twitch_subscription_type = request_json["subscription"]["type"]
-        logger.debug(f'subscription_type={twitch_subscription_type}')
-
         # Twitchトークン更新＆取得
         twitch_oauth_access_token = validate_twitch_access_token()[0]
 
@@ -121,17 +118,18 @@ def event_subscription_handler(request):
         message_type_notification = 'notification'
         message_type_verification = 'webhook_callback_verification'
 
+        twitch_subscription_type = request_json["subscription"]["type"]
+
         # 配信開始、または更新したら通知
         if request.headers['Twitch-Eventsub-Message-Type'] == message_type_notification:
             twitch_broadcaster_user_id = request_json["event"]["broadcaster_user_id"]
+            twitch_broadcaster_user_name = request_json['event']['broadcaster_user_name']
             twitch_broadcaster_user_login = request_json['event']['broadcaster_user_login']
 
             user_info = get_twitch_user_info(twitch_oauth_access_token, twitch_broadcaster_user_id)
             channel_info = get_channel_info(twitch_oauth_access_token, twitch_broadcaster_user_id)
 
             color = random.randint(0, 16777215)
-            twitch_broadcaster_user_name = request_json['event']['broadcaster_user_name']
-            twitch_channel_title = channel_info['data'][0]['title']
             twitch_game_name = channel_info['data'][0]['game_name']
             twitch_stream_title = channel_info['data'][0]['title']
             twitch_profile_image_url = user_info['data'][0]['profile_image_url']
@@ -159,11 +157,11 @@ def event_subscription_handler(request):
                         'fields': [
                             {
                                 'name': 'Streamer Name',
-                                'value': ''
+                                'value': twitch_broadcaster_user_name
                             },
                             {
                                 'name': 'Title',
-                                'value': f'[{twitch_channel_title}](https://www.twitch.tv/{twitch_broadcaster_user_login}'
+                                'value': f'[{twitch_stream_title}](https://www.twitch.tv/{twitch_broadcaster_user_login}'
                             },
                             {
                                 'name': 'Playing',
@@ -196,28 +194,33 @@ def event_subscription_handler(request):
                 logger.debug(f'response.status={pformat(response.status_code)}')
                 return 'event subscription success!', 204
 
-            # コールバックリクエストなら
-            elif request.headers['Twitch-Eventsub-Message-Type'] == message_type_verification:
-                headers = {'Content-Type': 'application/json'}
-                content = f'{twitch_broadcaster_user_name}さんの{twitch_subscription_type}イベントのサブスクリプションが成功しました!>'
+        # コールバックリクエストなら
+        elif request.headers['Twitch-Eventsub-Message-Type'] == message_type_verification:
+            twitch_broadcaster_user_id = request_json["subscription"]["condition"]["broadcaster_user_id"]
+            user_info = get_twitch_user_info(twitch_oauth_access_token, twitch_broadcaster_user_id)
+            twitch_user_display_name = user_info['data'][0]['display_name']
 
-                body = {
-                    'username': 'Twitch Stream Notifier',
-                    'avatar_url': ICON_IMAGE_URL,
-                    'content': content
-                }
+            headers = {'Content-Type': 'application/json'}
+            content = f'{twitch_user_display_name}さんの{twitch_subscription_type}イベントのサブスクリプションが成功しました!>'
 
-                logger.debug(f'webhook_url={WEBHOOK_URL}')
-                logger.debug(f'headers={pformat(headers)}')
-                logger.debug(f'body={pformat(body)}')
+            body = {
+                'username': 'Twitch Stream Notifier',
+                'avatar_url': ICON_IMAGE_URL,
+                'content': content
+            }
 
-                logger.info('----- post message -----')
-                response = requests.post(WEBHOOK_URL, json.dumps(body), headers=headers)
+            logger.debug(f'webhook_url={WEBHOOK_URL}')
+            logger.debug(f'headers={pformat(headers)}')
+            logger.debug(f'body={pformat(body)}')
 
-                logger.debug(f'response.status={pformat(response.status_code)}')
-                return request_json['challenge'], 200
+            logger.info('----- post message -----')
+            response = requests.post(WEBHOOK_URL, json.dumps(body), headers=headers)
+
+            logger.debug(f'response.status={pformat(response.status_code)}')
+            return request_json['challenge'], 200
 
     except Exception as e:
         logger.exception(e)
     finally:
         logger.info('===== END event subscription handler =====')
+        return 'END'

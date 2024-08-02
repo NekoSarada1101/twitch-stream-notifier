@@ -11,7 +11,7 @@ steps:
         "--trigger-http",
         "--allow-unauthenticated",
         "--runtime=python311",
-        "--memory=128M",
+        "--memory=256M",
         "--entry-point=event_subscription_handler",
         "--update-env-vars=WEBHOOK_URL=${_WEBHOOK_URL},ICON_IMAGE_URL=${_ICON_IMAGE_URL},TWITCH_CLIENT_ID=${_TWITCH_CLIENT_ID},TWITCH_CLIENT_SECRET=${_TWITCH_CLIENT_SECRET}",
         "--service-account=discord-bot@slackbot-288310.iam.gserviceaccount.com",
