@@ -9,6 +9,7 @@ steps:
         "--region=asia-northeast1",
         "--source=.",
         "--trigger-http",
+        "--allow-unauthenticated",
         "--runtime=python311",
         "--memory=128M",
         "--entry-point=event_subscription_handler",
