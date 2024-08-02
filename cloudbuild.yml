@@ -1,0 +1,17 @@
+steps:
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      [
+        "functions",
+        "deploy",
+        "twitch-stream-notifier",
+        "--region=asia-northeast1",
+        "--source=.",
+        "--trigger-topic=cloud-builds",
+        "--runtime=python311",
+        "--memory=128M",
+        "--entry-point=event_subscription_handler",
+        "--update-env-vars=WEBHOOK_URL=${_WEBHOOK_URL},ICON_IMAGE_URL=${_ICON_IMAGE_URL},TWITCH_CLIENT_ID=${_TWITCH_CLIENT_ID},TWITCH_CLIENT_SECRET=${_TWITCH_CLIENT_SECRET}",
+        "--service-account=discord-bot@slackbot-288310.iam.gserviceaccount.com",
+      ]
