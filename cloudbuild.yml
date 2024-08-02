@@ -8,7 +8,7 @@ steps:
         "twitch-stream-notifier",
         "--region=asia-northeast1",
         "--source=.",
-        "--trigger-topic=cloud-builds",
+        "--trigger-http",
         "--runtime=python311",
         "--memory=128M",
         "--entry-point=event_subscription_handler",
