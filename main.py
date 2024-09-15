@@ -104,6 +104,17 @@ def get_channel_info(twitch_oauth_access_token, twitch_broadcaster_user_id):
     return channel_info
 
 
+def get_streams(twitch_oauth_access_token):
+    logger.info('----- GET twitch api get streams -----')
+    headers = twitch_api_header(twitch_oauth_access_token)
+    streams_info = requests.get(
+        f'{TWITCH_API_URL}/helix/streams',
+        headers=headers
+    ).json()
+    logger.debug(f'response={streams_info}')
+    return streams_info
+
+
 def event_subscription_handler(request):
     logger.info('===== START event subscription handler =====')
     request_json = request.get_json()
@@ -184,15 +195,70 @@ def event_subscription_handler(request):
                     'embeds': embeds
                 }
 
-                logger.debug(f'webhook_url={WEBHOOK_URL}')
-                logger.debug(f'headers={pformat(headers)}')
-                logger.debug(f'body={pformat(body)}')
+            elif request_json['subscription']['type'] == 'channel.update':
+                streams_info = get_streams(twitch_oauth_access_token)
 
-                logger.info('----- post message -----')
-                response = requests.post(WEBHOOK_URL, json.dumps(body), headers=headers)
+                if len(streams_info['data']) == 0:
+                    logger.info(f'{twitch_broadcaster_user_name} is not streaming now')
+                    return 204
 
-                logger.debug(f'response.status={pformat(response.status_code)}')
-                return 'event subscription success!', 204
+                headers = {'Content-Type': 'application/json'}
+                content = f'{twitch_broadcaster_user_name}さんの配信が更新されました。 {twitch_game_name} : {twitch_stream_title}'
+                embeds = [
+                    {
+                        'timestamp': datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+                        'color': color,
+                        'footer': {
+                            'text': 'Twitch Stream Notifier',
+                            'icon_url': ICON_IMAGE_URL
+                        },
+                        'author': {
+                            'name': '@Twitch',
+                            'url': 'https://www.twitch.tv/',
+                            'icon_url': ICON_IMAGE_URL
+                        },
+                        'thumbnail': {
+                            'url': twitch_profile_image_url,
+                        },
+                        'fields': [
+                            {
+                                'name': 'Streamer Name',
+                                'value': twitch_broadcaster_user_name
+                            },
+                            {
+                                'name': 'Title',
+                                'value': f'[{twitch_stream_title}](https://www.twitch.tv/{twitch_broadcaster_user_login})'
+                            },
+                            {
+                                'name': 'Playing',
+                                'value': twitch_game_name,
+                                'inline': True
+                            },
+                            {
+                                'name': 'Update at',
+                                'value': str(datetime.strptime(request_json['subscription']['created_at'], '%Y-%m-%dT%H:%M:%SZ') + timedelta(hours=9)),
+                                'inline': True
+                            },
+                        ]
+                    },
+                ]
+
+                body = {
+                    'username': 'Twitch Stream Notifier',
+                    'avatar_url': ICON_IMAGE_URL,
+                    'content': content,
+                    'embeds': embeds
+                }
+
+            logger.debug(f'webhook_url={WEBHOOK_URL}')
+            logger.debug(f'headers={pformat(headers)}')
+            logger.debug(f'body={pformat(body)}')
+
+            logger.info('----- post message -----')
+            response = requests.post(WEBHOOK_URL, json.dumps(body), headers=headers)
+
+            logger.debug(f'response.status={pformat(response.status_code)}')
+            return 204
 
         # コールバックリクエストなら
         elif request.headers['Twitch-Eventsub-Message-Type'] == message_type_verification:
