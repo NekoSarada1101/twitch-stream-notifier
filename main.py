@@ -108,8 +108,7 @@ def get_streams(twitch_oauth_access_token, twitch_broadcaster_user_id):
     logger.info('----- GET twitch api get streams -----')
     headers = twitch_api_header(twitch_oauth_access_token)
     streams_info = requests.get(
-        f'{TWITCH_API_URL}/helix/streams',
-        body=json.dumps({'user_id': twitch_broadcaster_user_id}),
+        f'{TWITCH_API_URL}/helix/streams?user_id={twitch_broadcaster_user_id}',
         headers=headers
     ).json()
     logger.debug(f'response={streams_info}')
