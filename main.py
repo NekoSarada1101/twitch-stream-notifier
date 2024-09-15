@@ -161,7 +161,7 @@ def event_subscription_handler(request):
                             },
                             {
                                 'name': 'Title',
-                                'value': f'[{twitch_stream_title}](https://www.twitch.tv/{twitch_broadcaster_user_login}'
+                                'value': f'[{twitch_stream_title}](https://www.twitch.tv/{twitch_broadcaster_user_login})'
                             },
                             {
                                 'name': 'Playing',
@@ -201,7 +201,7 @@ def event_subscription_handler(request):
             twitch_user_display_name = user_info['data'][0]['display_name']
 
             headers = {'Content-Type': 'application/json'}
-            content = f'{twitch_user_display_name}さんの{twitch_subscription_type}イベントのサブスクリプションが成功しました!>'
+            content = f'{twitch_user_display_name}さんの{twitch_subscription_type}イベントのサブスクリプションが成功しました!'
 
             body = {
                 'username': 'Twitch Stream Notifier',
@@ -221,6 +221,6 @@ def event_subscription_handler(request):
 
     except Exception as e:
         logger.exception(e)
+        return 500
     finally:
         logger.info('===== END event subscription handler =====')
-        return 'END'
