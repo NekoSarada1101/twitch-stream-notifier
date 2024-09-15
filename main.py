@@ -258,7 +258,7 @@ def event_subscription_handler(request):
             response = requests.post(WEBHOOK_URL, json.dumps(body), headers=headers)
 
             logger.debug(f'response.status={pformat(response.status_code)}')
-            return 204
+            return 'end', 204
 
         # コールバックリクエストなら
         elif request.headers['Twitch-Eventsub-Message-Type'] == message_type_verification:
@@ -287,6 +287,6 @@ def event_subscription_handler(request):
 
     except Exception as e:
         logger.exception(e)
-        return 500
+        return 'end', 204
     finally:
         logger.info('===== END event subscription handler =====')
