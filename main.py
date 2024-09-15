@@ -200,7 +200,7 @@ def event_subscription_handler(request):
 
                 if len(streams_info['data']) == 0:
                     logger.info(f'{twitch_broadcaster_user_name} is not streaming now')
-                    return 204
+                    return 'end', 204
 
                 headers = {'Content-Type': 'application/json'}
                 content = f'{twitch_broadcaster_user_name}さんの配信が更新されました。 {twitch_game_name} : {twitch_stream_title}'
@@ -233,12 +233,7 @@ def event_subscription_handler(request):
                                 'name': 'Playing',
                                 'value': twitch_game_name,
                                 'inline': True
-                            },
-                            {
-                                'name': 'Update at',
-                                'value': str(datetime.strptime(request_json['subscription']['created_at'], '%Y-%m-%dT%H:%M:%SZ') + timedelta(hours=9)),
-                                'inline': True
-                            },
+                            }
                         ]
                     },
                 ]
