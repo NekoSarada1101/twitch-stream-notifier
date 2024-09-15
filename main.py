@@ -104,11 +104,12 @@ def get_channel_info(twitch_oauth_access_token, twitch_broadcaster_user_id):
     return channel_info
 
 
-def get_streams(twitch_oauth_access_token):
+def get_streams(twitch_oauth_access_token, twitch_broadcaster_user_id):
     logger.info('----- GET twitch api get streams -----')
     headers = twitch_api_header(twitch_oauth_access_token)
     streams_info = requests.get(
         f'{TWITCH_API_URL}/helix/streams',
+        body=json.dumps({'user_id': twitch_broadcaster_user_id}),
         headers=headers
     ).json()
     logger.debug(f'response={streams_info}')
@@ -196,7 +197,7 @@ def event_subscription_handler(request):
                 }
 
             elif request_json['subscription']['type'] == 'channel.update':
-                streams_info = get_streams(twitch_oauth_access_token)
+                streams_info = get_streams(twitch_oauth_access_token, twitch_broadcaster_user_id)
 
                 if len(streams_info['data']) == 0:
                     logger.info(f'{twitch_broadcaster_user_name} is not streaming now')
