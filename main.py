@@ -72,8 +72,11 @@ def validate_twitch_access_token():
         }
         firestore_client.collection('secretary_bot_v2').document('twitch').set(token)
 
+        twitch_oauth_access_token = response['access_token']
+        twitch_oauth_refresh_token = response['refresh_token']
+
     logger.info('===== END validate twitch access token =====')
-    return [response['access_token'], response['refresh_token']]
+    return [twitch_oauth_access_token, twitch_oauth_refresh_token]
 
 
 def twitch_api_header(twitch_token):
